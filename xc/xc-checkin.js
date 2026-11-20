@@ -15,7 +15,7 @@
  */
 
 const SITE = 'https://xingchiapi.com';
-const PREFS_KEY = 'xingchi_refresh_token';
+const PREFS_KEY = 'xc_refresh_token';
 // 可选：如果抓取失败，可手动把浏览器的 refresh_token 粘到这里（不建议分享此文件）。
 const MANUAL_TOKEN = '';
 
