@@ -1,0 +1,4 @@
+; xc · 星驰 API 签到抓取
+; 由 QX 的 [rewrite_remote] 引用：包含 MITM 主机名和一条重写规则。
+hostname = xingchiapi.com
+^https:\/\/xingchiapi\.com\/api\/v1\/auth\/ url script-response-body https://raw.githubusercontent.com/NANYUA/nwhe/main/xc/xc-capture.js
