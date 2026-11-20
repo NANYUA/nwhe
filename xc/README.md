@@ -4,14 +4,34 @@
 
 ## 文件
 
-| 文件 | QX 类型 | 作用 |
+| 文件 | 类型 | 作用 |
 |---|---|---|
-| `xc-capture.js` | `[rewrite_local]` + `script-response-body` | 从登录/刷新响应中抓取 `refresh_token` |
-| `xc-checkin.js` | `[task_local]` | 每天刷新令牌并签到 |
+| `xc-capture.js` | JS | 从登录/刷新响应中抓取 `refresh_token` |
+| `xc-checkin.js` | JS | 每天刷新令牌并签到 |
+| `xc-rewrite.snippet` | QX 重写规则资源 | 包含 MITM 主机名和抓取规则 |
 
-## 配置
+## 方式 A：`[rewrite_remote]`（推荐，本地不写重写规则）
 
-把下面内容合并进 QX 配置文件；已有 `[rewrite_local]`、`[task_local]`、`[mitm]` 段落时只加行，不要重复段落。
+```ini
+[rewrite_remote]
+https://raw.githubusercontent.com/NANYUA/nwhe/main/xc/xc-rewrite.snippet, tag=星驰抓取, enabled=true
+
+[task_local]
+0 8 * * * https://raw.githubusercontent.com/NANYUA/nwhe/main/xc/xc-checkin.js, tag=星驰签到, enabled=true
+```
+
+`xc-rewrite.snippet` 的内容是：
+
+```ini
+hostname = xingchiapi.com
+^https:\/\/xingchiapi\.com\/api\/v1\/auth\/ url script-response-body https://raw.githubusercontent.com/NANYUA/nwhe/main/xc/xc-capture.js
+```
+
+QX 拉取该资源后会合并 hostname 和重写规则，本地配置里不需要再写 `[rewrite_local]` 或改 `[mitm]`。
+
+> 注意：`[rewrite_remote]` 只接受**规则资源**，不能直接填 `.js` 文件；JS 是在片段里用 URL 引用的。
+
+## 方式 B：本地 `[rewrite_local]`
 
 ```ini
 [rewrite_local]
@@ -19,16 +39,13 @@
 
 [task_local]
 0 8 * * * https://raw.githubusercontent.com/NANYUA/nwhe/main/xc/xc-checkin.js, tag=星驰签到, enabled=true
-
-[mitm]
-hostname = %APPEND% xingchiapi.com
 ```
 
-> `%APPEND%` 只适用于远程资源；如果你直接编辑本地主配置的 `hostname`，请把 `xingchiapi.com` 用逗号追加到原有列表末尾。
+并在原有 `hostname` 末尾用逗号追加 `xingchiapi.com`。
 
 ## 使用前提
 
-1. QX 已开启 MitM，并安装、信任证书。
+1. QX 已开启 MitM，并安装、信任证书（`[rewrite_remote]` 里的 hostname 只负责匹配，证书仍要信任）。
 2. 在 Safari 中登录一次 `https://xingchiapi.com`，QX 日志出现 `xc: refresh token saved`。
 3. 在 QX 任务里手动运行一次「星驰签到」确认结果。
 
